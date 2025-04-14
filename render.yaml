@@ -2,5 +2,6 @@ services:
   - type: web
     name: google-trends-api
     env: python
-    buildCommand: ""
+    plan: free
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
