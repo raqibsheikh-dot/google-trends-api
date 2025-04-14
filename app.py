@@ -6,10 +6,17 @@ app = Flask(__name__)
 @app.route('/trend', methods=['GET'])
 def trend():
     term = request.args.get('term')
+    if not term:
+        return jsonify({'error': 'No term provided'}), 400
+
     pytrends = TrendReq(hl='en-US', tz=360)
     pytrends.build_payload([term], cat=0, timeframe='now 7-d', geo='US')
-    data = pytrends.interest_over_time().reset_index().to_dict(orient='records')
-    return jsonify(data)
+    data = pytrends.interest_over_time()
 
-if __name__ == '__main__':
-    app.run()
+    if data.empty:
+        return jsonify({'error': 'No data found for the term'}), 404
+
+    data.reset_index(inplace=True)
+    data = data[['date', term]]
+    data.rename(columns={term: 'value'}, inplace=True)
+    return jsonify(data.to_dict(orient='records'))
